@@ -6,13 +6,11 @@ import com.baticuisines.entity.componentType.Labor;
 import com.baticuisines.entity.componentType.Material;
 import com.baticuisines.enums.ProjectStatus;
 import com.baticuisines.repository.ClientRepositoryInterface;
+import com.baticuisines.repository.ComponentRepositoryInterface;
 import com.baticuisines.repository.ProjectRepositoryInterface;
 import com.baticuisines.utils.InputValidator;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 
 import static com.baticuisines.Main.getUserChoice;
 import static com.baticuisines.enums.ProjectStatus.ONGOING;
@@ -21,10 +19,12 @@ public class ProjectService {
 
     private final ProjectRepositoryInterface projectRepository;
     private final ClientRepositoryInterface clientRepository;
+    private final ComponentRepositoryInterface componentRepository;
 
-    public ProjectService(ProjectRepositoryInterface projectRepository , ClientRepositoryInterface clientRepository) {
+    public ProjectService(ProjectRepositoryInterface projectRepository , ClientRepositoryInterface clientRepository, ComponentRepositoryInterface componentRepository) {
         this.projectRepository = projectRepository;
         this.clientRepository = clientRepository;
+        this.componentRepository = componentRepository;
     }
 
 
@@ -56,7 +56,7 @@ public class ProjectService {
         String clientName = scanner.nextLine();
         Client client = null;
 
-        Optional<Client> clientOptional = clientRepository.findByName(clientName);
+        Optional<Client> clientOptional = findByName(clientName);
 
         if (clientOptional.isPresent()) {
             client = clientOptional.get();
@@ -75,6 +75,12 @@ public class ProjectService {
         }
 
         return client;
+    }
+
+    public Optional<Client> findByName(String name) {
+        return clientRepository.findAll().stream()
+                .filter(client -> client.getName().equalsIgnoreCase(name))
+                .findFirst();
     }
 
     private Client addNewClient(Scanner scanner) {
@@ -106,9 +112,42 @@ public class ProjectService {
         ProjectStatus projectStatus = ONGOING;
 
         Project project = new Project(id , projectName , surfaceArea, profitMargin, totalCost, projectStatus, client , materials , labors);
-        System.out.println(project);
-//        return projectRepository.save(project);
+        Project projectInserted =  projectRepository.save(project);
 
+        if(projectInserted != null) {
+
+            for (Material material : materials) {
+                material.setProject(project);
+            }
+            for (Labor labor : labors) {
+                labor.setProject(project);
+            }
+
+            saveComponents(materials, labors);
+        }
+
+        calculateTotalCost(scanner,project);
+
+    }
+
+
+    public Map<String, List<?>> saveComponents(List<Material> materials, List<Labor> labors) {
+
+        Map<String, List<?>> componentsPair = new HashMap<>();
+
+        for (Material material : materials) {
+            Material materialInserted = componentRepository.saveMaterial(material);
+        }
+
+        for (Labor labor : labors) {
+            Labor laborInserted = componentRepository.saveLabor(labor);
+        }
+
+
+        componentsPair.put("materials", materials);
+        componentsPair.put("labors", labors);
+
+        return componentsPair;
     }
 
 
@@ -158,6 +197,130 @@ public class ProjectService {
         return labors;
     }
 
+
+    public void calculateTotalCost(Scanner scanner, Project project) {
+        System.out.println("\n\n--- Calcul du coût total ---\n");
+
+        boolean applyTVA = InputValidator.handleYesNo(scanner, "Souhaitez-vous appliquer une TVA au projet ? (y/n) :");
+        if (applyTVA) {
+            double tvaRate = InputValidator.getValidatedDouble(scanner, "Entrez le pourcentage de TVA (%) :");
+            updateTVA(scanner, project, tvaRate);
+        }
+        double margin = 0;
+        boolean applyMargin = InputValidator.handleYesNo(scanner, "Souhaitez-vous appliquer une une marge bénéficiaire au projet ? (y/n) :");
+        if (applyMargin) {
+            margin = InputValidator.getValidatedDouble(scanner, "Entrez le pourcentage de TVA (%) :");
+            updateProfiteMargin(scanner, project, margin);
+        }
+
+        double totalCostWithVAT = calculateTotalCostWithTVA(project);
+
+        double marginProject = (totalCostWithVAT * margin) / 100 ;
+
+        double totalCost = totalCostWithVAT + marginProject;
+
+        project.setTotalCost(totalCost);
+
+//        displayProjectComponents(project);
+        System.out.println("3. Coût total avant marge : "+totalCostWithVAT+" €\n" +
+                " 4. Marge bénéficiaire (" + margin +"%) : 441.00 €");
+
+        System.out.println("Le coût total du projet " + project.getProjectName() +", TVA et Marge incluse, est de : "+ totalCost+" €");
+    }
+
+
+    private void updateTVA(Scanner scanner, Project project, double tvaRate) {
+
+        List<Material> materials = componentRepository.getMaterialsByProjectId(project.getId());
+        for (Material material : materials) {
+            material.setTVARate(tvaRate);
+            componentRepository.updateMaterial(material);
+        }
+
+        List<Labor> labors = componentRepository.getLaborsByProjectId(project.getId());
+        for (Labor labor : labors) {
+            labor.setTVARate(tvaRate);
+            componentRepository.updateLabor(labor);
+        }
+
+        System.out.println("TVA mise à jour pour tous les composants du projet.");
+    }
+
+    private void updateProfiteMargin(Scanner scanner, Project project, double margin) {
+
+        project.setProfitMargin(margin);
+        if(projectRepository.updateProfiteMargin(project)) {
+            System.out.println("Marge benificiaire mise à jour pour tous les composants du projet.");
+        }
+
+
+    }
+
+
+    public double calculateTotalCostWithTVA(Project project) {
+        List<Material> materials = componentRepository.getMaterialsByProjectId(project.getId());
+        List<Labor> labors = componentRepository.getLaborsByProjectId(project.getId());
+
+        System.out.println("--- Résultat du Calcul---");
+        System.out.println("Nom du projet : " + project.getProjectName());
+        System.out.println("Client : " + project.getClient().getName());
+        System.out.println("Adresse du chantier : " + project.getClient().getAddress());
+        System.out.println("Surface : " + project.getSurfaceArea());
+
+        double totalMaterialCost = 0.0;
+        double totalMaterialCostTVA = 0.0;
+        double totalLaborCost = 0.0;
+        double totalLaborCostTVA = 0.0;
+
+        System.out.println("--- Détail des Coûts---");
+        System.out.println("1. Matériaux :");
+
+        for (Material material : materials) {
+            double materialCost = material.getQuantity() * material.getUnitCost() * material.getQualityCoefficient() + material.getTransportCost();
+            double materialCostWithTVA = materialCost * (1 + material.getTVARate() / 100);
+            totalMaterialCost += materialCost;
+            totalMaterialCostTVA += materialCostWithTVA;
+            System.out.println("- "+ material.getName() +" : " + materialCost+ " (quantité : " + material.getQuantity() + ", coût unitaire : " + material.getUnitCost() +", qualité : " + material.getQualityCoefficient() +", transport : "+ material.getTransportCost() +")");
+        }
+
+        System.out.println("**Coût total des matériaux avant TVA : " + totalMaterialCost +" €**");
+        System.out.println("**Coût total des matériaux avec TVA  : "+ totalMaterialCostTVA +" €**");
+
+        System.out.println("\n\n2. Main-d'œuvre :");
+
+        for (Labor labor : labors) {
+            double laborCost = labor.getHourlyRate() * labor.getWorkHours() * labor.getWorkerProductivity();
+            double laborCostWithTVA = laborCost * (1 + labor.getTVARate() / 100);
+            totalLaborCost += laborCost;
+            totalLaborCostTVA += laborCostWithTVA;
+            System.out.println("- " + labor.getName() +" : "+ laborCost +" € (taux horaire : " + labor.getHourlyRate()+ " €/h, heures travaillées : "+ labor.getWorkHours() +" h, productivité : "+ labor.getWorkerProductivity() +")");
+        }
+
+        System.out.println("**Coût total de la main-d'œuvre avant TVA : " + totalLaborCost +" €**");
+        System.out.println("**Coût total de la main-d'œuvre avec TVA (20%) : " + totalLaborCostTVA + " €**");
+
+        return (totalLaborCostTVA + totalMaterialCostTVA);
+
+    }
+
+
+
+
+
+    private void displayProjectComponents(Project project) {
+        List<Material> materials = componentRepository.getMaterialsByProjectId(project.getId());
+        List<Labor> labors = componentRepository.getLaborsByProjectId(project.getId());
+
+        System.out.println("Matériaux pour le projet  " + project.getProjectName() + ":");
+        for (Material material : materials) {
+            System.out.println(material);
+        }
+
+        System.out.println("MainOeuvre pour le projet " + project.getProjectName() + ":");
+        for (Labor labor : labors) {
+            System.out.println(labor);
+        }
+    }
 
 
 

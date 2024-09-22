@@ -1,12 +1,15 @@
 package com.baticuisines;
 
 import com.baticuisines.repository.ClientRepositoryInterface;
+import com.baticuisines.repository.ComponentRepositoryInterface;
 import com.baticuisines.repository.ProjectRepositoryInterface;
 import com.baticuisines.repository.classes.ClientRepository;
+import com.baticuisines.repository.classes.ComponentRepository;
 import com.baticuisines.repository.classes.ProjectRepository;
 import com.baticuisines.service.ProjectService;
 
 import java.util.InputMismatchException;
+import java.util.Locale;
 import java.util.Scanner;
 
 public class Main {
@@ -16,10 +19,12 @@ public class Main {
 
         ProjectRepositoryInterface projectRepository = new ProjectRepository();
         ClientRepositoryInterface clientRepository = new ClientRepository();
+        ComponentRepositoryInterface componentRepository = new ComponentRepository();
 
-        ProjectService service = new ProjectService(projectRepository, clientRepository);
+        ProjectService service = new ProjectService(projectRepository, clientRepository, componentRepository);
 
         Scanner scanner = new Scanner(System.in);
+
 
         do {
             System.out.println("\n\n === Bienvenue dans l'application de gestion des projets de rénovation de cuisines ===");
@@ -82,15 +87,5 @@ public class Main {
         scanner.nextLine();
     }
 
-    public static int chooseOption() {
 
-        System.out.println("1 . Do you want to reserve a room?");
-        System.out.println("0 . Go back to main menu");
-
-        Scanner scanner = new Scanner(System.in);
-        int option = scanner.nextInt();
-
-
-        return option;
-    }
 }
