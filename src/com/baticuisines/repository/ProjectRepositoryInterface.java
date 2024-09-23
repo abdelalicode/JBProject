@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface ProjectRepositoryInterface {
         Project save(Project project);
+        boolean updateProfiteMargin(Project project);
 //        Optional<Project> findById(Long id);
 //        List<Project> findAll();
 //        void delete(Long id);

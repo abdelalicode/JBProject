@@ -32,6 +32,7 @@ public class InputValidator {
         double input = -1;
         boolean isValid = false;
 
+
         while (!isValid) {
             try {
                 System.out.print(prompt);

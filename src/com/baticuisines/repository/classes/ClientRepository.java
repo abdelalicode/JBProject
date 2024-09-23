@@ -60,12 +60,11 @@ public class ClientRepository implements ClientRepositoryInterface {
     }
 
 
-
-    public Optional<Client> findByName(String name) {
-        return findAll().stream()
-                .filter(client -> client.getName().equalsIgnoreCase(name))
-                .findFirst();
-    }
+//    public Optional<Client> findByName(String name) {
+//        return findAll().stream()
+//                .filter(client -> client.getName().equalsIgnoreCase(name))
+//                .findFirst();
+//    }
 
 
 

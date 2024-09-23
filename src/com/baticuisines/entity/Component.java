@@ -50,6 +50,14 @@ public class Component {
         this.TVARate = TVARate;
     }
 
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
+    }
+
     @Override
     public String toString() {
         return "Component{" +
