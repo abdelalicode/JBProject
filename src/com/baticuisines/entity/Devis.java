@@ -1,17 +1,18 @@
 package com.baticuisines.entity;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.UUID;
 
 public class Devis {
     private UUID id;
     private double estimatedAmount;
-    private Date issueDate;
-    private Date validityDate;
+    private LocalDate issueDate;
+    private LocalDate validityDate;
     private boolean accepted;
     private Project project;
 
-    public Devis(UUID id, double estimatedAmount, Date issueDate, Date validityDate, boolean accepted , Project project) {
+    public Devis(UUID id, double estimatedAmount, LocalDate issueDate, LocalDate validityDate, boolean accepted , Project project) {
         this.id = id;
         this.estimatedAmount = estimatedAmount;
         this.issueDate = issueDate;
@@ -36,19 +37,19 @@ public class Devis {
         this.estimatedAmount = estimatedAmount;
     }
 
-    public Date getIssueDate() {
+    public LocalDate getIssueDate() {
         return issueDate;
     }
 
-    public void setIssueDate(Date issueDate) {
+    public void setIssueDate(LocalDate issueDate) {
         this.issueDate = issueDate;
     }
 
-    public Date getValidityDate() {
+    public LocalDate getValidityDate() {
         return validityDate;
     }
 
-    public void setValidityDate(Date validityDate) {
+    public void setValidityDate(LocalDate validityDate) {
         this.validityDate = validityDate;
     }
 
@@ -61,14 +62,27 @@ public class Devis {
     }
 
 
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
+    }
+
     @Override
     public String toString() {
-        return "Devis{" +
-                "id=" + id +
-                ", estimatedAmount=" + estimatedAmount +
-                ", issueDate=" + issueDate +
-                ", validityDate=" + validityDate +
-                ", accepted=" + accepted +
-                '}';
+        return  "\n╔══════════════════════════════════════════╗" +
+                "\n║              Devis Details               ║" +
+                "\n╚══════════════════════════════════════════╝" +
+                "\n╭──────────────────────────────────────────╮" +
+                "\n│ ID:                " + id +
+                "\n│ PROJECT :          " + project.getProjectName() +
+                "\n│ Estimated Amount:  $" + String.format("%.2f", estimatedAmount) +
+                "\n│ Issue Date:        " + issueDate +
+                "\n│ Validity Date:     " + validityDate +
+                "\n│ Accepted:          " + (accepted ? "✔ Yes" : "✘ No") +
+                "\n╰──────────────────────────────────────────╯\n";
     }
+
 }

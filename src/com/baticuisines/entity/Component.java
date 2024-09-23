@@ -4,11 +4,11 @@ import java.util.List;
 
 public class Component {
 
-    private int id;
-    private String name;
-    private String componentType;
-    private double TVARate;
-    private Project project;
+    protected int id;
+    protected String name;
+    protected String componentType;
+    protected double TVARate;
+    protected Project project;
 
     public Component(int id, String name, String componentType, double TVARate) {
         this.id = id;

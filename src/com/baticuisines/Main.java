@@ -1,5 +1,6 @@
 package com.baticuisines;
 
+import com.baticuisines.entity.Project;
 import com.baticuisines.repository.ClientRepositoryInterface;
 import com.baticuisines.repository.ComponentRepositoryInterface;
 import com.baticuisines.repository.ProjectRepositoryInterface;
@@ -17,9 +18,10 @@ public class Main {
     public static void main(String[] args) {
 
 
-        ProjectRepositoryInterface projectRepository = new ProjectRepository();
+
         ClientRepositoryInterface clientRepository = new ClientRepository();
         ComponentRepositoryInterface componentRepository = new ComponentRepository();
+        ProjectRepositoryInterface projectRepository = new ProjectRepository(componentRepository);
 
         ProjectService service = new ProjectService(projectRepository, clientRepository, componentRepository);
 
@@ -36,15 +38,18 @@ public class Main {
                     System.out.println("--- Recherche de client existant ---");
                     service.handleClientManagement(scanner);
                     pause(scanner);
+
                     break;
                 case 2:
-                    System.out.println("viewAllProjects");
-//                    service.viewAllProjects();
+                    service.viewAllProjects();
                     pause(scanner);
                     break;
                 case 3:
                     System.out.println("calculateProjectCost");
-//                    service.calculateProjectCost(scanner);
+                    Project project = service.findProjectById(scanner);
+                    if(project != null) {
+                        service.calculateTotalCost(scanner , project);
+                    }
                     pause(scanner);
                     break;
                 case 4:
@@ -86,6 +91,7 @@ public class Main {
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }
+
 
 
 }

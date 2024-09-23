@@ -47,10 +47,10 @@ public class Labor extends Component {
 
     @Override
     public String toString() {
-        return "Labor{" +
+        return  "- " + name.toUpperCase() +
                 ", hourlyRate=" + hourlyRate +
                 ", workHours=" + workHours +
                 ", workerProductivity=" + workerProductivity +
-                '}';
+                ", TVA:" + TVARate + "%";
     }
 }

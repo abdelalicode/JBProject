@@ -52,11 +52,12 @@ public class Material extends Component {
 
     @Override
     public String toString() {
-        return "Material{" +
-                "quantity=" + quantity +
-                ", unitCost=" + unitCost +
-                ", transportCost=" + transportCost +
-                ", qualityCoefficient=" + qualityCoefficient +
-                '}';
+        return   "- " + name.toUpperCase() +
+                "  quantity:" + quantity +
+                ", unitCost:" + unitCost +
+                ", transportCost:" + transportCost +
+                ", qualityCoefficient:" + qualityCoefficient +
+                ", TVA:" + TVARate + "%";
+
     }
 }
