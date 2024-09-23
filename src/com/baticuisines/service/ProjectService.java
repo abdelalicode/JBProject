@@ -1,6 +1,7 @@
 package com.baticuisines.service;
 
 import com.baticuisines.entity.Client;
+import com.baticuisines.entity.Devis;
 import com.baticuisines.entity.Project;
 import com.baticuisines.entity.componentType.Labor;
 import com.baticuisines.entity.componentType.Material;
@@ -10,10 +11,13 @@ import com.baticuisines.repository.ComponentRepositoryInterface;
 import com.baticuisines.repository.ProjectRepositoryInterface;
 import com.baticuisines.utils.InputValidator;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.baticuisines.Main.getUserChoice;
 import static com.baticuisines.enums.ProjectStatus.ONGOING;
+import static java.util.UUID.randomUUID;
 
 public class ProjectService {
 
@@ -126,10 +130,28 @@ public class ProjectService {
             saveComponents(materials, labors);
         }
 
-        calculateTotalCost(scanner,project);
+        Double totalProjectCost = calculateTotalCost(scanner,project);
+
+        createProjectDevis(scanner, project);
+
 
     }
 
+    public Project findProjectById(Scanner scanner) {
+
+        int projectId = InputValidator.getValidatedInt(scanner, "Enter Project ID: ");
+        Optional<Project> projectOptional = projectRepository.findById(projectId);
+
+        if(projectOptional.isPresent()) {
+            displayProjectComponents(projectOptional.get());
+            return projectOptional.get();
+        }
+        else {
+            System.out.println("No Project Found");
+            return null;
+        }
+
+    }
 
     public Map<String, List<?>> saveComponents(List<Material> materials, List<Labor> labors) {
 
@@ -198,18 +220,19 @@ public class ProjectService {
     }
 
 
-    public void calculateTotalCost(Scanner scanner, Project project) {
+    public Double calculateTotalCost(Scanner scanner, Project project) {
         System.out.println("\n\n--- Calcul du coût total ---\n");
 
-        boolean applyTVA = InputValidator.handleYesNo(scanner, "Souhaitez-vous appliquer une TVA au projet ? (y/n) :");
+        boolean applyTVA = InputValidator.handleYesNo(scanner, "Souhaitez-vous appliquer une TVA au projet ?");
         if (applyTVA) {
             double tvaRate = InputValidator.getValidatedDouble(scanner, "Entrez le pourcentage de TVA (%) :");
             updateTVA(scanner, project, tvaRate);
         }
         double margin = 0;
-        boolean applyMargin = InputValidator.handleYesNo(scanner, "Souhaitez-vous appliquer une une marge bénéficiaire au projet ? (y/n) :");
+
+        boolean applyMargin = InputValidator.handleYesNo(scanner, "Souhaitez-vous appliquer une une marge bénéficiaire au projet ?");
         if (applyMargin) {
-            margin = InputValidator.getValidatedDouble(scanner, "Entrez le pourcentage de TVA (%) :");
+            margin = InputValidator.getValidatedDouble(scanner, "Entrez le pourcentage du marge benificiare (%) :");
             updateProfiteMargin(scanner, project, margin);
         }
 
@@ -221,11 +244,15 @@ public class ProjectService {
 
         project.setTotalCost(totalCost);
 
+        projectRepository.updateProjectTotalCost(project);
+
 //        displayProjectComponents(project);
-        System.out.println("3. Coût total avant marge : "+totalCostWithVAT+" €\n" +
-                " 4. Marge bénéficiaire (" + margin +"%) : 441.00 €");
+        System.out.println("3. Coût total avant marge : "+totalCostWithVAT+" €\n\n" +
+                "4. Marge bénéficiaire (" + margin +"%) : "+marginProject+" €\n\n");
 
         System.out.println("Le coût total du projet " + project.getProjectName() +", TVA et Marge incluse, est de : "+ totalCost+" €");
+
+        return totalCost;
     }
 
 
@@ -304,7 +331,39 @@ public class ProjectService {
     }
 
 
+    public void createProjectDevis(Scanner scanner , Project project) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+        UUID id = randomUUID();
+
+        System.out.println("--- Enregistrement du Devis---");
+
+        LocalDate issueDate = InputValidator.getValidDate(scanner, "Entrez la date d'émission du devis", dtf);
+
+        LocalDate validityDate = InputValidator.getValidDate(scanner, "Entrez la date de validité du devis", dtf);
+
+        Devis devis = new Devis(id , project.getTotalCost(), issueDate, validityDate, true , project);
+
+        boolean saveDevis = InputValidator.handleYesNo(scanner, "Souhaitez-vous enregistrer le devis ?");
+
+        if (saveDevis) {
+
+            Devis devisCreated = projectRepository.createDevis(devis);
+            System.out.println("Le devis a été enregistré avec succès.");
+
+            if (InputValidator.handleYesNo(scanner, "Imprimer le devis ?")) {
+                System.out.println(devisCreated);
+            }
+
+        } else {
+
+            devis.setAccepted(false);
+            projectRepository.createDevis(devis);
+            System.out.println("Le devis n'a pas été enregistré.");
+        }
+
+
+    }
 
 
     private void displayProjectComponents(Project project) {
@@ -320,6 +379,21 @@ public class ProjectService {
         for (Labor labor : labors) {
             System.out.println(labor);
         }
+    }
+
+
+    public  void viewAllProjects() {
+        System.out.println("Tous les Projects :");
+        List<Project> allProjects = projectRepository.findAll();
+
+        allProjects.stream().sorted(Comparator.comparingDouble(Project::getTotalCost)).forEach(project -> {
+            System.out.println("_________________________________________________________________________________________________________________");
+            System.out.println(" ID: "+ project.getId() +",  Nom du Projet : " + project.getProjectName() + ", Surface : "
+                    + project.getSurfaceArea() + " m², Coût Total : "
+                    + String.format("%.2f", project.getTotalCost()) + " € , Location:" + project.getClient().getAddress());
+            System.out.println("_________________________________________________________________________________________________________________");
+        });
+
     }
 
 

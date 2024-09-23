@@ -1,6 +1,9 @@
 package com.baticuisines.utils;
 import com.baticuisines.entity.Client;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.function.BiConsumer;
@@ -10,7 +13,8 @@ import java.util.function.Consumer;
 public class InputValidator {
 
 
-        public static int getValidatedInt(Scanner scanner, String prompt) {
+
+    public static int getValidatedInt(Scanner scanner, String prompt) {
             int input = -1;
             boolean isValid = false;
 
@@ -105,6 +109,25 @@ public class InputValidator {
             return false;
         }
     }
+
+    public static LocalDate getValidDate(Scanner scanner, String prompt, DateTimeFormatter dtf) {
+        LocalDate date = null;
+        while (date == null) {
+            System.out.print(prompt);
+            String input = scanner.nextLine();
+            try {
+                date = LocalDate.parse(input, dtf);
+                if (date.isBefore(LocalDate.now())) {
+                    System.out.println("La date est dans le passé. Veuillez entrer une date future.");
+                    date = null;
+                }
+            } catch (DateTimeParseException e) {
+                System.out.println("Format de date invalide. Veuillez utiliser le format jj/MM/aaaa.");
+            }
+        }
+        return date;
+    }
+
 
 
 }
