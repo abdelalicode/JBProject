@@ -132,6 +132,19 @@ public class ProjectService {
 
         Double totalProjectCost = calculateTotalCost(scanner,project);
 
+        if(project.getClient().isProfessional())
+        {
+            System.out.println("\n"+project.getClient().getName() + " est  professionel");
+            double remise = InputValidator.getValidatedDouble(scanner, " Entrez la remise souhaitée: ");
+
+            if(remise !=0) {
+               Double projectCost = totalProjectCost - (totalProjectCost * remise / 100.0);
+                System.out.println("\n\nCout Totale après remise " + projectCost +"\n");
+                project.setTotalCost(projectCost);
+                projectRepository.updateProjectTotalCost(project);
+            }
+        }
+
         createProjectDevis(scanner, project);
 
 
@@ -172,7 +185,6 @@ public class ProjectService {
         return componentsPair;
     }
 
-
     private List<Material> collectMaterials(Scanner scanner) {
         List<Material> materials = new ArrayList<>();
         boolean addMoreMaterials = true;
@@ -196,7 +208,6 @@ public class ProjectService {
         return materials;
     }
 
-
     private List<Labor> collectLabor(Scanner scanner) {
         List<Labor> labors = new ArrayList<>();
         boolean addMoreLabor = true;
@@ -218,7 +229,6 @@ public class ProjectService {
         }
         return labors;
     }
-
 
     public Double calculateTotalCost(Scanner scanner, Project project) {
         System.out.println("\n\n--- Calcul du coût total ---\n");
@@ -255,7 +265,6 @@ public class ProjectService {
         return totalCost;
     }
 
-
     private void updateTVA(Scanner scanner, Project project, double tvaRate) {
 
         List<Material> materials = componentRepository.getMaterialsByProjectId(project.getId());
@@ -282,7 +291,6 @@ public class ProjectService {
 
 
     }
-
 
     public double calculateTotalCostWithTVA(Project project) {
         List<Material> materials = componentRepository.getMaterialsByProjectId(project.getId());
@@ -330,7 +338,6 @@ public class ProjectService {
 
     }
 
-
     public void createProjectDevis(Scanner scanner , Project project) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -365,7 +372,6 @@ public class ProjectService {
 
     }
 
-
     private void displayProjectComponents(Project project) {
         List<Material> materials = componentRepository.getMaterialsByProjectId(project.getId());
         List<Labor> labors = componentRepository.getLaborsByProjectId(project.getId());
@@ -381,12 +387,11 @@ public class ProjectService {
         }
     }
 
-
     public  void viewAllProjects() {
         System.out.println("Tous les Projects :");
-        List<Project> allProjects = projectRepository.findAll();
+        Map<Integer,Project> allProjects = projectRepository.findAll();
 
-        allProjects.stream().sorted(Comparator.comparingDouble(Project::getTotalCost)).forEach(project -> {
+        allProjects.values().stream().sorted(Comparator.comparingDouble(Project::getTotalCost)).forEach(project -> {
             System.out.println("_________________________________________________________________________________________________________________");
             System.out.println(" ID: "+ project.getId() +",  Nom du Projet : " + project.getProjectName() + ", Surface : "
                     + project.getSurfaceArea() + " m², Coût Total : "

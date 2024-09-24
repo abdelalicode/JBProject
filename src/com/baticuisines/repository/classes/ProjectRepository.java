@@ -11,10 +11,7 @@ import com.baticuisines.repository.ProjectRepositoryInterface;
 import ressources.DBconnection;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class ProjectRepository implements ProjectRepositoryInterface {
 
@@ -49,8 +46,8 @@ public class ProjectRepository implements ProjectRepositoryInterface {
         return project;
     }
 
-    public List<Project> findAll() {
-        List<Project> projects = new ArrayList<>();
+    public Map<Integer, Project> findAll() {
+        Map<Integer ,Project> projects = new HashMap<>();
         String query = "SELECT project.*, client.id AS client_id, client.name AS client_name, client.address AS client_address, " +
                 "client.phonenumber AS client_phonenumber, client.isprofessional AS client_isprofessional " +
                 "FROM project JOIN client ON project.clientid = client.id";
@@ -79,7 +76,7 @@ public class ProjectRepository implements ProjectRepositoryInterface {
                 List<Labor> labors = componentRepository.getLaborsByProjectId(projectId);
 
                 Project project = new Project(projectId, projectName, surfaceArea, profitMargin, totalCost, projectStatus, client, materials, labors);
-                projects.add(project);
+                projects.put(project.getId(),project);
             }
 
         } catch (SQLException e) {

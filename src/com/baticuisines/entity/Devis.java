@@ -72,9 +72,7 @@ public class Devis {
 
     @Override
     public String toString() {
-        return  "\n╔══════════════════════════════════════════╗" +
-                "\n║              Devis Details               ║" +
-                "\n╚══════════════════════════════════════════╝" +
+        return
                 "\n╭──────────────────────────────────────────╮" +
                 "\n│ ID:                " + id +
                 "\n│ PROJECT :          " + project.getProjectName() +
