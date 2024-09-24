@@ -6,6 +6,7 @@ import com.baticuisines.enums.ProjectStatus;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface ProjectRepositoryInterface {
@@ -14,6 +15,6 @@ public interface ProjectRepositoryInterface {
         void updateProjectTotalCost(Project project);
         Devis createDevis(Devis devis);
         Optional<Project> findById(int id);
-        List<Project> findAll();
+        Map<Integer, Project> findAll();
 //        void delete(Long id);
 }

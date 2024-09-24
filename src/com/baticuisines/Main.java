@@ -68,7 +68,7 @@ public class Main {
         System.out.println("||                                       ||");
         System.out.println("||  1. Créer un nouveau projet           ||");
         System.out.println("||  2. Afficher les projets existants    ||");
-        System.out.println("||  3. Calculer le coût d'un projet      ||");
+        System.out.println("||  3. Calculer le cout d'un projet      ||");
         System.out.println("||  4. Quitter                           ||");
         System.out.println("||                                       ||");
         System.out.println("===========================================");
@@ -91,6 +91,8 @@ public class Main {
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }
+
+
 
 
 
